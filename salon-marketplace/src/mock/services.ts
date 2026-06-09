@@ -1,0 +1,68 @@
+import { ServiceCategory } from "@/types";
+
+export const serviceCategoriesMock: ServiceCategory[] = [
+  {
+    id: "cat-1",
+    name: "Haircut",
+    icon: "Scissors",
+    description: "Precision cuts for every style and occasion",
+    count: 245,
+    slug: "haircut",
+  },
+  {
+    id: "cat-2",
+    name: "Hair Color",
+    icon: "Palette",
+    description: "From subtle highlights to bold transformations",
+    count: 180,
+    slug: "hair-color",
+  },
+  {
+    id: "cat-3",
+    name: "Facial",
+    icon: "Sparkles",
+    description: "Rejuvenating treatments for glowing skin",
+    count: 156,
+    slug: "facial",
+  },
+  {
+    id: "cat-4",
+    name: "Spa",
+    icon: "Flower2",
+    description: "Relaxation and wellness therapies",
+    count: 120,
+    slug: "spa",
+  },
+  {
+    id: "cat-5",
+    name: "Nails",
+    icon: "Hand",
+    description: "Manicures, pedicures, and nail art",
+    count: 98,
+    slug: "nails",
+  },
+  {
+    id: "cat-6",
+    name: "Bridal Makeup",
+    icon: "Heart",
+    description: "Complete bridal beauty packages",
+    count: 72,
+    slug: "bridal-makeup",
+  },
+  {
+    id: "cat-7",
+    name: "Groom Makeup",
+    icon: "User",
+    description: "Grooming packages for the modern groom",
+    count: 54,
+    slug: "groom-makeup",
+  },
+  {
+    id: "cat-8",
+    name: "Skin Treatment",
+    icon: "Sun",
+    description: "Advanced skincare for lasting results",
+    count: 89,
+    slug: "skin-treatment",
+  },
+];
