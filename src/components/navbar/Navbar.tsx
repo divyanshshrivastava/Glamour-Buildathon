@@ -12,7 +12,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout, isAdmin, isLoading } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin, isSalonOwner, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -106,7 +106,16 @@ export default function Navbar() {
                                   className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/30 rounded-lg transition-colors"
                                 >
                                   <LayoutDashboard size={16} />
-                                  Admin Dashboard
+                                  Admin Panel
+                                </a>
+                              )}
+                              {isSalonOwner && (
+                                <a
+                                  href="/dashboard"
+                                  className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/30 rounded-lg transition-colors"
+                                >
+                                  <LayoutDashboard size={16} />
+                                  Salon Dashboard
                                 </a>
                               )}
                               <button
@@ -209,7 +218,17 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-4 py-3 text-base font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors mt-4 border-t border-border-light pt-6"
                     >
                       <LayoutDashboard size={20} />
-                      Admin Dashboard
+                      Admin Panel
+                    </a>
+                  )}
+                  {isAuthenticated && isSalonOwner && (
+                    <a
+                      href="/dashboard"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 text-base font-medium text-violet-600 hover:bg-violet-50 rounded-lg transition-colors mt-4 border-t border-border-light pt-6"
+                    >
+                      <LayoutDashboard size={20} />
+                      Salon Dashboard
                     </a>
                   )}
                 </div>

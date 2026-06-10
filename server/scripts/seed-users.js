@@ -4,8 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 async function seedUsers() {
   const password = 'Password123!';
-  // Note: Using bcryptjs as it is usually installed, or we can fallback to just bcrypt if that's what's in package.json.
-  // Actually let's use the one in package.json. 
   const hashedPassword = await bcrypt.hash(password, 10);
   
   const testUsers = [
@@ -53,8 +51,26 @@ async function seedUsers() {
         [id, user.email, hashedPassword, user.firstName, user.lastName, user.phone, user.role, now, now]
       );
       console.log(`Created user: ${user.email} (${user.role})`);
+
+      // If salon owner, create a salon and link it
+      if (user.role === 'salonOwner') {
+        const salonId = uuidv4();
+        const slug = `test-salon-${Date.now()}`;
+        await pool.query(
+          `INSERT INTO salons (id, name, slug, tagline, description, email, phone, address, city, salon_owner_id, active, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11, $12)`,
+          [salonId, 'Test Salon', slug, 'A test salon', 'Created by seed-users script for testing the salon owner dashboard.', user.email, user.phone, 'Test Address', 'Test City', id, now, now]
+        );
+        await pool.query('UPDATE users SET salon_id = $1 WHERE id = $2', [salonId, id]);
+        console.log(`  → Created salon "${slug}" and linked to ${user.email}`);
+      }
     }
-    console.log('Done!');
+
+    console.log('\nDone!');
+    console.log('\n📋 Login Credentials:');
+    console.log('├─ Admin:       admin@glamour.io / Password123!     → /admin');
+    console.log('├─ Salon Owner: salon@test.com / Password123!       → /dashboard');
+    console.log('└─ Customer:    customer@test.com / Password123!    → /');
   } catch (error) {
     console.error('Error seeding users:', error);
   } finally {

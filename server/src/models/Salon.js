@@ -68,6 +68,14 @@ export const SalonModel = {
     return result.rows[0];
   },
 
+  async findByOwnerId(ownerId) {
+    const result = await pool.query(
+      'SELECT * FROM salons WHERE salon_owner_id = $1 AND active = true',
+      [ownerId],
+    );
+    return result.rows[0];
+  },
+
   async findFeatured(limit = 6, city = null) {
     let query = `SELECT * FROM salons WHERE featured = true AND active = true`;
     const params = [];

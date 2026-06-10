@@ -34,6 +34,8 @@ function LoginContent() {
       // Redirect based on role
       if (response.role === "admin") {
         router.push("/admin");
+      } else if (response.role === "salonOwner") {
+        router.push("/dashboard");
       } else {
         router.push(returnUrl);
       }

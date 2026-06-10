@@ -14,13 +14,13 @@ export async function createBooking(
     const raw: any = await apiFetch("/bookings", {
       method: "POST",
       body: JSON.stringify({
-        salon_id: data.salonId,
-        service_id: data.serviceId,
-        booking_date: data.date,
-        booking_time: data.time,
-        customer_name: data.customerName,
-        customer_email: data.customerEmail,
-        customer_phone: data.customerPhone,
+        salonId: data.salonId,
+        serviceId: data.serviceId,
+        date: data.date,
+        time: data.time,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
         notes: data.notes,
       }),
     });

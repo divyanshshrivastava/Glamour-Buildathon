@@ -6,12 +6,21 @@ import {
   getAll,
   search,
   getById,
+  getMySalon,
   create,
   update,
   remove,
 } from '../controllers/salons.js';
 
 const router = express.Router();
+
+// GET /api/v1/salons/my (must be before /:id to avoid conflict)
+router.get(
+  '/my',
+  authMiddleware,
+  roleMiddleware('salonOwner', 'admin'),
+  asyncHandler(getMySalon),
+);
 
 // GET /api/v1/salons/featured
 router.get('/featured', asyncHandler(getFeatured));

@@ -14,11 +14,17 @@ import {
   Check,
   Calendar,
   ArrowLeft,
+  User,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/shared/Button";
 import StarRating from "@/components/shared/StarRating";
 import { formatPrice } from "@/lib/utils";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { createBooking } from "@/lib/api/bookings";
 import type { Salon, Review, Service } from "@/types";
 
 interface SalonDetailClientProps {
@@ -30,10 +36,28 @@ export default function SalonDetailClient({
   salon,
   reviews,
 }: SalonDetailClientProps) {
+  const { user, isAuthenticated } = useAuth();
+
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showAllServices, setShowAllServices] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+
+  // Booking form state
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [bookingNotes, setBookingNotes] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
+  // Pre-fill form when user is authenticated
+  const effectiveName =
+    customerName ||
+    (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "");
+  const effectiveEmail = customerEmail || user?.email || "";
+  const effectivePhone = customerPhone || user?.phone || "";
 
   const displayedServices = showAllServices
     ? salon.services
@@ -53,6 +77,64 @@ export default function SalonDetailClient({
     "16:00",
     "17:00",
   ];
+
+  // Minimum date is today
+  const today = new Date().toISOString().split("T")[0];
+
+  const canBook =
+    selectedService &&
+    selectedDate &&
+    selectedTime &&
+    effectiveName.trim() &&
+    effectiveEmail.trim() &&
+    effectivePhone.trim();
+
+  const handleBookNow = async () => {
+    if (!canBook || !selectedService) return;
+
+    setIsBooking(true);
+    setBookingError(null);
+
+    try {
+      await createBooking({
+        salonId: salon.id,
+        serviceId: selectedService.id,
+        date: selectedDate,
+        time: selectedTime,
+        customerName: effectiveName.trim(),
+        customerEmail: effectiveEmail.trim(),
+        customerPhone: effectivePhone.trim(),
+        notes: bookingNotes.trim() || undefined,
+      });
+
+      setBookingSuccess(true);
+      // Reset form
+      setSelectedService(null);
+      setSelectedDate("");
+      setSelectedTime("");
+      setCustomerName("");
+      setCustomerEmail("");
+      setCustomerPhone("");
+      setBookingNotes("");
+    } catch (err: any) {
+      console.error("Booking failed:", err);
+      const msg = err.message || "Booking failed. Please try again.";
+      // Try to extract the backend message from the error
+      try {
+        const match = msg.match(/\{.*\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]);
+          setBookingError(parsed.message || msg);
+        } else {
+          setBookingError(msg);
+        }
+      } catch {
+        setBookingError(msg);
+      }
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   return (
     <div className="pt-20 pb-16">
@@ -374,113 +456,216 @@ export default function SalonDetailClient({
               className="sticky top-24"
             >
               <div className="bg-white rounded-2xl border border-border-light p-6 shadow-sm">
-                <h3 className="text-xl font-semibold text-foreground mb-1">
-                  Book Appointment
-                </h3>
-                <p className="text-sm text-muted mb-6">
-                  Select a service and pick your preferred time.
-                </p>
-
-                {/* Selected Service */}
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Service
-                  </label>
-                  {selectedService ? (
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <p className="text-sm font-semibold text-foreground">
-                        {selectedService.name}
-                      </p>
-                      <p className="text-xs text-muted mt-0.5">
-                        {selectedService.duration} ·{" "}
-                        {formatPrice(selectedService.price)}
-                      </p>
+                {/* Success State */}
+                {bookingSuccess ? (
+                  <div className="text-center py-4">
+                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2
+                        size={32}
+                        className="text-green-600"
+                      />
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted p-3 rounded-lg bg-background border border-border-light">
-                      Select a service from the list →
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
+                      Booking Confirmed!
+                    </h3>
+                    <p className="text-sm text-muted mb-6">
+                      Your appointment has been booked successfully.
+                      Check your email for confirmation details.
                     </p>
-                  )}
-                </div>
-
-                {/* Date */}
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <Calendar
-                      size={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-                    />
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors"
-                    />
+                    <Button
+                      variant="outline"
+                      size="md"
+                      className="w-full"
+                      onClick={() => setBookingSuccess(false)}
+                    >
+                      Book Another Appointment
+                    </Button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-semibold text-foreground mb-1">
+                      Book Appointment
+                    </h3>
+                    <p className="text-sm text-muted mb-6">
+                      Select a service and pick your preferred time.
+                    </p>
 
-                {/* Time Slots */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Time
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {mockTimeSlots.map((time) => (
-                      <button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        className={`py-2 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                          selectedTime === time
-                            ? "bg-primary text-white"
-                            : "bg-background border border-border-light text-foreground hover:border-primary/40"
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                    {/* Selected Service */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Service
+                      </label>
+                      {selectedService ? (
+                        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                          <p className="text-sm font-semibold text-foreground">
+                            {selectedService.name}
+                          </p>
+                          <p className="text-xs text-muted mt-0.5">
+                            {selectedService.duration} ·{" "}
+                            {formatPrice(selectedService.price)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted p-3 rounded-lg bg-background border border-border-light">
+                          Select a service from the list →
+                        </p>
+                      )}
+                    </div>
 
-                {/* Price Summary */}
-                {selectedService && (
-                  <div className="mb-6 p-4 rounded-lg bg-background border border-border-light">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted">Service</span>
-                      <span className="font-medium text-foreground">
-                        {formatPrice(selectedService.price)}
-                      </span>
+                    {/* Date */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Date
+                      </label>
+                      <div className="relative">
+                        <Calendar
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="date"
+                          value={selectedDate}
+                          min={today}
+                          onChange={(e) => setSelectedDate(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
-                      <span className="text-muted">Platform fee</span>
-                      <span className="font-medium text-foreground">₹0</span>
+
+                    {/* Time Slots */}
+                    <div className="mb-5">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Time
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {mockTimeSlots.map((time) => (
+                          <button
+                            key={time}
+                            onClick={() => setSelectedTime(time)}
+                            className={`py-2 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
+                              selectedTime === time
+                                ? "bg-primary text-white"
+                                : "bg-background border border-border-light text-foreground hover:border-primary/40"
+                            }`}
+                          >
+                            {time}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="border-t border-border-light mt-3 pt-3 flex items-center justify-between">
-                      <span className="text-sm font-semibold text-foreground">
-                        Total
-                      </span>
-                      <span className="text-lg font-bold text-foreground">
-                        {formatPrice(selectedService.price)}
-                      </span>
+
+                    {/* Customer Details */}
+                    <div className="mb-5 space-y-3 pt-4 border-t border-border-light">
+                      <label className="block text-sm font-medium text-foreground">
+                        Your Details
+                      </label>
+                      <div className="relative">
+                        <User
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="text"
+                          value={customerName || effectiveName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Full name"
+                          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="relative">
+                        <Mail
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="email"
+                          value={customerEmail || effectiveEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                          placeholder="Email address"
+                          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="relative">
+                        <Phone
+                          size={16}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="tel"
+                          value={customerPhone || effectivePhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          placeholder="Phone number"
+                          className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <textarea
+                        value={bookingNotes}
+                        onChange={(e) => setBookingNotes(e.target.value)}
+                        placeholder="Any special requests? (optional)"
+                        rows={2}
+                        className="w-full px-4 py-2.5 text-sm rounded-lg border border-border-light bg-background text-foreground outline-none focus:border-primary transition-colors resize-none"
+                      />
                     </div>
-                  </div>
+
+                    {/* Price Summary */}
+                    {selectedService && (
+                      <div className="mb-6 p-4 rounded-lg bg-background border border-border-light">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted">Service</span>
+                          <span className="font-medium text-foreground">
+                            {formatPrice(selectedService.price)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm mt-2">
+                          <span className="text-muted">Platform fee</span>
+                          <span className="font-medium text-foreground">
+                            ₹0
+                          </span>
+                        </div>
+                        <div className="border-t border-border-light mt-3 pt-3 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-foreground">
+                            Total
+                          </span>
+                          <span className="text-lg font-bold text-foreground">
+                            {formatPrice(selectedService.price)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error message */}
+                    {bookingError && (
+                      <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+                        <AlertCircle
+                          size={16}
+                          className="text-red-500 mt-0.5 flex-shrink-0"
+                        />
+                        <p className="text-xs text-red-700">{bookingError}</p>
+                      </div>
+                    )}
+
+                    {/* Book Button */}
+                    <Button
+                      size="lg"
+                      className="w-full rounded-xl"
+                      disabled={!canBook || isBooking}
+                      onClick={handleBookNow}
+                    >
+                      {isBooking ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 size={18} className="animate-spin" />
+                          Booking…
+                        </span>
+                      ) : (
+                        "Book Now"
+                      )}
+                    </Button>
+
+                    <p className="mt-3 text-xs text-center text-muted">
+                      Free cancellation up to 24 hours before
+                    </p>
+                  </>
                 )}
-
-                {/* Book Button */}
-                <Button
-                  size="lg"
-                  className="w-full rounded-xl"
-                  disabled={!selectedService || !selectedDate || !selectedTime}
-                >
-                  {/* TODO BACKEND: Integrate with createBooking API */}
-                  Book Now
-                </Button>
-
-                <p className="mt-3 text-xs text-center text-muted">
-                  Free cancellation up to 24 hours before
-                </p>
               </div>
             </motion.div>
           </div>

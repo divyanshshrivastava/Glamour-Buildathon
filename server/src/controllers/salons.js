@@ -13,6 +13,7 @@ import {
   noContentResponse,
 } from '../utils/response.js';
 import { validateUUID } from '../utils/validation.js';
+import pool from '../config/database.js';
 
 // ── Helper: Generate slug from name ───────────────────────────────────
 
@@ -53,6 +54,63 @@ const formatSalon = (salon) => {
     createdAt: salon.created_at,
     updatedAt: salon.updated_at,
   };
+};
+
+// ── GET /api/v1/salons/my ─────────────────────────────────────────────
+
+export const getMySalon = async (req, res) => {
+  const salon = await SalonModel.findByOwnerId(req.user.id);
+  if (!salon) {
+    return errorResponse(res, ERROR_CODES.NOT_FOUND, 'You do not have a salon associated with your account', {}, 404);
+  }
+
+  // Get related data + stats in parallel
+  const [services, openingHours, bookingStats, reviewStats] = await Promise.all([
+    ServiceModel.findBySalonId(salon.id),
+    OpeningHoursModel.findBySalonId(salon.id),
+    pool.query(
+      `SELECT 
+         COUNT(*) FILTER (WHERE status = 'pending') as pending,
+         COUNT(*) FILTER (WHERE status = 'confirmed') as confirmed,
+         COUNT(*) FILTER (WHERE status = 'completed') as completed,
+         COUNT(*) as total
+       FROM bookings WHERE salon_id = $1`,
+      [salon.id],
+    ),
+    pool.query(
+      'SELECT COUNT(*) as total FROM reviews WHERE salon_id = $1',
+      [salon.id],
+    ),
+  ]);
+
+  const stats = bookingStats.rows[0];
+
+  const formatted = {
+    ...formatSalon(salon),
+    services: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      price: parseFloat(s.price),
+      duration: s.duration,
+      category: s.category,
+      description: s.description,
+    })),
+    openingHours: openingHours.map((h) => ({
+      day: h.day,
+      open: h.open_time,
+      close: h.close_time,
+      closed: h.closed,
+    })),
+    stats: {
+      totalBookings: parseInt(stats.total) || 0,
+      pendingBookings: parseInt(stats.pending) || 0,
+      confirmedBookings: parseInt(stats.confirmed) || 0,
+      completedBookings: parseInt(stats.completed) || 0,
+      totalReviews: parseInt(reviewStats.rows[0].total) || 0,
+    },
+  };
+
+  return successResponse(res, formatted);
 };
 
 // ── GET /api/v1/salons/featured ───────────────────────────────────────
