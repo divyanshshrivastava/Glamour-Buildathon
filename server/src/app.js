@@ -48,13 +48,13 @@ app.use(limiter);
 // More specific rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login attempts per windowMs
+  max: process.env.NODE_ENV === 'development' ? 500 : 5, // Allow more attempts in development
   message: 'Too many login attempts, please try again later.',
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 registrations per hour
+  max: process.env.NODE_ENV === 'development' ? 100 : 3, // Limit each IP to 3 registrations per hour
   message: 'Too many registrations from this IP, please try again later.',
 });
 

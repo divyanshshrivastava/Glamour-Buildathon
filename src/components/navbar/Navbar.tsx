@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
 import { NAV_ITEMS, SITE_NAME } from "@/lib/constants";
 import Button from "@/components/shared/Button";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { getInitials } from "@/lib/utils";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout, isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +32,11 @@ export default function Navbar() {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  const handleLogout = () => {
+    logout();
+    setUserMenuOpen(false);
+  };
 
   return (
     <>
@@ -62,12 +71,72 @@ export default function Navbar() {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
-              <Button variant="ghost" size="sm">
-                Log in
-              </Button>
-              <Button variant="primary" size="sm">
-                Sign Up
-              </Button>
+              {!isLoading && (
+                isAuthenticated && user ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-medium shadow-sm">
+                        {user.firstName ? getInitials(`${user.firstName} ${user.lastName || ''}`) : <UserIcon size={20} />}
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {userMenuOpen && (
+                        <>
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-border-light overflow-hidden z-50"
+                          >
+                            <div className="px-4 py-3 border-b border-border-light bg-accent/10">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User'}
+                              </p>
+                              <p className="text-xs text-muted truncate">{user.email}</p>
+                            </div>
+                            <div className="p-1">
+                              {isAdmin && (
+                                <a
+                                  href="/admin"
+                                  className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent/30 rounded-lg transition-colors"
+                                >
+                                  <LayoutDashboard size={16} />
+                                  Admin Dashboard
+                                </a>
+                              )}
+                              <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
+                              >
+                                <LogOut size={16} />
+                                Log out
+                              </button>
+                            </div>
+                          </motion.div>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setUserMenuOpen(false)}
+                          />
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" href="/login">
+                      Log in
+                    </Button>
+                    <Button variant="primary" size="sm" href="/signup">
+                      Sign Up
+                    </Button>
+                  </>
+                )
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -132,16 +201,59 @@ export default function Navbar() {
                       {item.label}
                     </a>
                   ))}
+                  
+                  {isAuthenticated && isAdmin && (
+                    <a
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 text-base font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors mt-4 border-t border-border-light pt-6"
+                    >
+                      <LayoutDashboard size={20} />
+                      Admin Dashboard
+                    </a>
+                  )}
                 </div>
               </div>
 
               <div className="p-6 border-t border-border-light space-y-3">
-                <Button variant="outline" size="md" className="w-full">
-                  Log in
-                </Button>
-                <Button variant="primary" size="md" className="w-full">
-                  Sign Up
-                </Button>
+                {!isLoading && (
+                  isAuthenticated && user ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 px-2">
+                        <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-medium shadow-sm">
+                          {user.firstName ? getInitials(`${user.firstName} ${user.lastName || ''}`) : <UserIcon size={24} />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User'}
+                          </p>
+                          <p className="text-sm text-muted">{user.email}</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="md" 
+                        className="w-full justify-start text-red-600 hover:text-white hover:bg-red-600 hover:border-red-600"
+                        onClick={() => {
+                          handleLogout();
+                          setMobileOpen(false);
+                        }}
+                      >
+                        <LogOut size={18} />
+                        Log out
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Button variant="outline" size="md" className="w-full" href="/login" onClick={() => setMobileOpen(false)}>
+                        Log in
+                      </Button>
+                      <Button variant="primary" size="md" className="w-full" href="/signup" onClick={() => setMobileOpen(false)}>
+                        Sign Up
+                      </Button>
+                    </>
+                  )
+                )}
               </div>
             </div>
           </motion.div>

@@ -118,3 +118,58 @@ export interface PartnerFormData {
   city: string;
   message?: string;
 }
+
+export interface PartnerApplication extends PartnerFormData {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  rejectionReason?: string;
+  createdAt: string;
+  reviewedAt?: string;
+}
+
+// ─── Auth ────────────────────────────────────────────────
+
+export interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  role: "customer" | "salonOwner" | "admin";
+  salonId: string | null;
+  emailVerified: boolean;
+  lastLogin?: string;
+  createdAt: string;
+  token?: string;
+  refreshToken?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isSalonOwner: boolean;
+  isLoading: boolean;
+}
+
+// ─── Admin ───────────────────────────────────────────────
+
+export interface DashboardStats {
+  totalSalons: number;
+  totalBookings: number;
+  totalUsers: number;
+  totalReviews: number;
+  pendingApplications: number;
+  pendingReviews: number;
+  revenue?: {
+    thisMonth: number;
+    thisYear: number;
+  };
+  topSalons: {
+    id: string;
+    name: string;
+    rating: number;
+    bookings: number;
+  }[];
+}
