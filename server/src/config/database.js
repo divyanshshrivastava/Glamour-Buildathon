@@ -2,7 +2,16 @@ import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({
+  path: './.env.example',
+});
+
+console.log('🔧 Database Configuration:');
+console.log(`Host: ${process.env.DB_HOST}`);
+console.log(`Port: ${process.env.DB_PORT}`);
+console.log(`Database: ${process.env.DB_NAME}`);
+console.log(`User: ${process.env.DB_USER}`);
+console.log(`Password: ${process.env.DB_PASSWORD}`);
 
 const pool = new Pool({
   host: process.env.DB_HOST,

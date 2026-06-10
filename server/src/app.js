@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import 'express-async-errors';
 import dotenv from 'dotenv';
@@ -17,7 +18,9 @@ import partnerRoutes from './routes/partners.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
 
-dotenv.config();
+dotenv.config({
+  path: './.env.example',
+});
 
 const app = express();
 
@@ -25,14 +28,17 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN?.split(',') || '*',
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
-  }),
+  })
 );
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Rate limiting
 const limiter = rateLimit({

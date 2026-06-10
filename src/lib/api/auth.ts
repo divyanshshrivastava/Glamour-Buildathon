@@ -48,6 +48,24 @@ export async function getCurrentUser(token: string) {
   }
 }
 
+/**
+ * Call POST /auth/refresh.
+ * The refresh_token httpOnly cookie is sent automatically via credentials: 'include'.
+ * Returns the new access token string, or null on failure.
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const data = await apiFetch<{ token: string; expiresIn: number }>(
+      "/auth/refresh",
+      { method: "POST" },
+    );
+    return data.token;
+  } catch (error) {
+    console.error("Token refresh failed:", error);
+    return null;
+  }
+}
+
 export async function logoutUser(token: string) {
   try {
     await apiFetchWithAuth("/auth/logout", token, {
@@ -57,3 +75,4 @@ export async function logoutUser(token: string) {
     console.error("Logout failed on server:", error);
   }
 }
+

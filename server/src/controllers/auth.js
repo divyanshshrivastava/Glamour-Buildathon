@@ -22,6 +22,14 @@ import {
 
 const SALT_ROUNDS = 10;
 
+const cookieOptions = (maxAgeSeconds) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  maxAge: maxAgeSeconds * 1000,
+  path: '/',
+});
+
 // ── POST /api/v1/auth/register ────────────────────────────────────────
 
 export const register = async (req, res) => {
@@ -143,6 +151,12 @@ export const login = async (req, res) => {
   // Update last login
   await UserModel.updateLastLogin(user.id);
 
+  // Set tokens in httpOnly cookies
+  const accessMaxAge = parseInt(process.env.JWT_EXPIRE) || 3600;
+  const refreshMaxAge = parseInt(process.env.JWT_REFRESH_EXPIRE) || 7 * 24 * 3600; // 7 days default
+  res.cookie('access_token', token, cookieOptions(accessMaxAge));
+  res.cookie('refresh_token', refreshToken, cookieOptions(refreshMaxAge));
+
   return successResponse(res, {
     id: user.id,
     email: user.email,
@@ -152,19 +166,23 @@ export const login = async (req, res) => {
     salonId: user.salon_id,
     token,
     refreshToken,
-    expiresIn: parseInt(process.env.JWT_EXPIRE) || 3600,
+    expiresIn: accessMaxAge,
   });
 };
 
 // ── POST /api/v1/auth/logout ──────────────────────────────────────────
 
 export const logout = async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.headers.authorization?.split(' ')[1] || req.cookies?.access_token;
 
   if (token) {
     // Delete session
     await pool.query('DELETE FROM sessions WHERE token = $1', [token]);
   }
+
+  // Clear auth cookies
+  res.clearCookie('access_token', { path: '/' });
+  res.clearCookie('refresh_token', { path: '/' });
 
   return successResponse(res, null, 'Logged out successfully');
 };
@@ -172,7 +190,7 @@ export const logout = async (req, res) => {
 // ── POST /api/v1/auth/refresh ─────────────────────────────────────────
 
 export const refresh = async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body.refreshToken || req.cookies?.refresh_token;
 
   if (!refreshToken) {
     return errorResponse(res, ERROR_CODES.VALIDATION_ERROR, 'Refresh token is required', {}, 422);
@@ -219,9 +237,13 @@ export const refresh = async (req, res) => {
     [newToken, expiresAt, refreshToken],
   );
 
+  // Set new access token cookie
+  const accessMaxAge = parseInt(process.env.JWT_EXPIRE) || 3600;
+  res.cookie('access_token', newToken, cookieOptions(accessMaxAge));
+
   return successResponse(res, {
     token: newToken,
-    expiresIn: parseInt(process.env.JWT_EXPIRE) || 3600,
+    expiresIn: accessMaxAge,
   });
 };
 

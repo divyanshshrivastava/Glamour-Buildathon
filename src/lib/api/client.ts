@@ -7,7 +7,7 @@
  */
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
 
 interface ApiResponse<T> {
   status: string;
@@ -29,26 +29,25 @@ interface ApiResponse<T> {
  */
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
 
   const res = await fetch(url, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...init?.headers,
     },
+    credentials: 'include',
     // Prevent Next.js from caching API calls during SSR by default,
     // so pages always show fresh data from the backend.
-    cache: "no-store",
+    cache: 'no-store',
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(
-      `API ${res.status} ${res.statusText} – ${path}: ${body}`
-    );
+    const body = await res.text().catch(() => '');
+    throw new Error(`API ${res.status} ${res.statusText} – ${path}: ${body}`);
   }
 
   const json: ApiResponse<T> = await res.json();
@@ -58,25 +57,24 @@ export async function apiFetch<T>(
 export async function apiFetchWithAuth<T>(
   path: string,
   token: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
 
   const res = await fetch(url, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
       ...init?.headers,
     },
-    cache: "no-store",
+    credentials: 'include',
+    cache: 'no-store',
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(
-      `API ${res.status} ${res.statusText} – ${path}: ${body}`
-    );
+    const body = await res.text().catch(() => '');
+    throw new Error(`API ${res.status} ${res.statusText} – ${path}: ${body}`);
   }
 
   const json: ApiResponse<T> = await res.json();

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { AuthState, User } from "@/types";
-import { getCurrentUser } from "../api/auth";
+import { getCurrentUser, refreshAccessToken } from "../api/auth";
 
 interface AuthContextType extends AuthState {
   login: (token: string, user: User) => void;
@@ -26,29 +26,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const storedToken = localStorage.getItem("auth_token");
-        
-        if (storedToken) {
-          // Verify token and get fresh user data from backend
-          const userData = await getCurrentUser(storedToken);
-          
+        let token = localStorage.getItem("auth_token");
+
+        if (token) {
+          // Try fetching the current user with the stored access token
+          let userData = await getCurrentUser(token);
+
+          // If the access token is expired, attempt a silent refresh
+          if (!userData) {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+              token = newToken;
+              localStorage.setItem("auth_token", token);
+              userData = await getCurrentUser(token);
+            }
+          }
+
           if (userData) {
             setState({
               user: userData,
-              token: storedToken,
+              token,
               isAuthenticated: true,
               isAdmin: userData.role === "admin",
               isSalonOwner: userData.role === "salonOwner",
               isLoading: false,
             });
-          } else {
-            // Token invalid or expired
-            localStorage.removeItem("auth_token");
-            setState((prev) => ({ ...prev, isLoading: false }));
+            return;
           }
-        } else {
-          setState((prev) => ({ ...prev, isLoading: false }));
         }
+
+        // No token or all attempts failed — clear everything
+        localStorage.removeItem("auth_token");
+        setState((prev) => ({ ...prev, isLoading: false }));
       } catch (error) {
         console.error("Auth initialization failed:", error);
         localStorage.removeItem("auth_token");

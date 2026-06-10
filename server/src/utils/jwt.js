@@ -1,17 +1,20 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({
+  path: './.env.example',
+});
 
 export const generateToken = (payload) => {
+  // parseInt so jsonwebtoken treats the value as seconds, not ms via the `ms` lib
   return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+    expiresIn: parseInt(process.env.JWT_EXPIRE, 10) || 3600,
   });
 };
 
 export const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRE,
+    expiresIn: parseInt(process.env.JWT_REFRESH_EXPIRE, 10) || 2592000,
   });
 };
 
