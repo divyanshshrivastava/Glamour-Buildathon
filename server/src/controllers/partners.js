@@ -111,19 +111,29 @@ export const approve = async (req, res) => {
     return errorResponse(res, ERROR_CODES.VALIDATION_ERROR, `Application is already ${application.status}`, {}, 400);
   }
 
-  // Generate a default password if none provided
-  const userPassword = password || `Glamour${Date.now().toString().slice(-6)}!`;
-  const hashedPassword = await bcrypt.hash(userPassword, SALT_ROUNDS);
+  // Check if user already exists
+  let user = await UserModel.findByEmail(application.email);
+  if (user) {
+    // Update existing user role to salonOwner
+    const updateResult = await import('../config/database.js').then(m => 
+      m.default.query('UPDATE users SET role = $1 WHERE email = $2 RETURNING id', [ROLES.SALON_OWNER, application.email])
+    );
+    user.id = updateResult.rows[0].id;
+  } else {
+    // Generate a default password if none provided
+    const userPassword = password || `Glamour${Date.now().toString().slice(-6)}!`;
+    const hashedPassword = await bcrypt.hash(userPassword, SALT_ROUNDS);
 
-  // Create user account with salonOwner role
-  const user = await UserModel.create({
-    email: application.email,
-    password: hashedPassword,
-    firstName: application.owner_name.split(' ')[0],
-    lastName: application.owner_name.split(' ').slice(1).join(' ') || null,
-    phone: application.phone,
-    role: ROLES.SALON_OWNER,
-  });
+    // Create user account with salonOwner role
+    user = await UserModel.create({
+      email: application.email,
+      password: hashedPassword,
+      firstName: application.owner_name.split(' ')[0],
+      lastName: application.owner_name.split(' ').slice(1).join(' ') || null,
+      phone: application.phone,
+      role: ROLES.SALON_OWNER,
+    });
+  }
 
   // Set email as verified (admin-approved)
   await UserModel.verifyEmail(user.id);

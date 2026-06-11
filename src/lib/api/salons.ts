@@ -1,5 +1,4 @@
 import { Salon, SearchFilters } from "@/types";
-import { salonsMock, featuredSalonsMock } from "@/mock/salons";
 import { apiFetch } from "./client";
 
 /**
@@ -50,13 +49,8 @@ function mapSalon(raw: any): Salon {
  * Backend endpoint: GET /api/v1/salons/featured
  */
 export async function getFeaturedSalons(): Promise<Salon[]> {
-  try {
-    const raw = await apiFetch<unknown[]>("/salons/featured");
-    return raw.map(mapSalon);
-  } catch (err) {
-    console.warn("Backend unreachable for featured salons, using mock data:", err);
-    return featuredSalonsMock;
-  }
+  const raw = await apiFetch<unknown[]>("/salons/featured");
+  return raw.map(mapSalon);
 }
 
 /**
@@ -65,13 +59,8 @@ export async function getFeaturedSalons(): Promise<Salon[]> {
  * Backend endpoint: GET /api/v1/salons/:id
  */
 export async function getSalonById(id: string): Promise<Salon | null> {
-  try {
-    const raw = await apiFetch<unknown>(`/salons/${id}`);
-    return mapSalon(raw);
-  } catch (err) {
-    console.warn(`Backend unreachable for salon ${id}, using mock data:`, err);
-    return salonsMock.find((s) => s.id === id) ?? null;
-  }
+  const raw = await apiFetch<unknown>(`/salons/${id}`);
+  return mapSalon(raw);
 }
 
 /**
@@ -80,29 +69,15 @@ export async function getSalonById(id: string): Promise<Salon | null> {
  * Backend endpoint: GET /api/v1/salons/search?...
  */
 export async function searchSalons(filters: SearchFilters): Promise<Salon[]> {
-  try {
-    const params = new URLSearchParams();
-    if (filters.location) params.set("location", filters.location);
-    if (filters.service) params.set("q", filters.service);
-    if (filters.minRating) params.set("minRating", String(filters.minRating));
-    if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
-    if (filters.sortBy) params.set("sortBy", filters.sortBy);
+  const params = new URLSearchParams();
+  if (filters.location) params.set("location", filters.location);
+  if (filters.service) params.set("q", filters.service);
+  if (filters.minRating) params.set("minRating", String(filters.minRating));
+  if (filters.maxPrice) params.set("maxPrice", String(filters.maxPrice));
+  if (filters.sortBy) params.set("sortBy", filters.sortBy);
 
-    const raw = await apiFetch<unknown[]>(`/salons/search?${params.toString()}`);
-    return raw.map(mapSalon);
-  } catch (err) {
-    console.warn("Backend unreachable for salon search, using mock data:", err);
-    let results = [...salonsMock];
-    if (filters.minRating)
-      results = results.filter((s) => s.rating >= filters.minRating!);
-    if (filters.maxPrice)
-      results = results.filter((s) => s.startingPrice <= filters.maxPrice!);
-    if (filters.sortBy === "rating")
-      results.sort((a, b) => b.rating - a.rating);
-    else if (filters.sortBy === "price")
-      results.sort((a, b) => a.startingPrice - b.startingPrice);
-    return results;
-  }
+  const raw = await apiFetch<unknown[]>(`/salons/search?${params.toString()}`);
+  return raw.map(mapSalon);
 }
 
 /**
@@ -111,11 +86,6 @@ export async function searchSalons(filters: SearchFilters): Promise<Salon[]> {
  * Backend endpoint: GET /api/v1/salons
  */
 export async function getAllSalons(): Promise<Salon[]> {
-  try {
-    const raw = await apiFetch<unknown[]>("/salons");
-    return raw.map(mapSalon);
-  } catch (err) {
-    console.warn("Backend unreachable for all salons, using mock data:", err);
-    return salonsMock;
-  }
+  const raw = await apiFetch<unknown[]>("/salons");
+  return raw.map(mapSalon);
 }

@@ -131,7 +131,7 @@ export const BookingModel = {
       [salonId, bookingDate, bookingTime, BOOKING_STATUS.CANCELLED],
     );
 
-    return result.rows[0].count === 0;
+    return parseInt(result.rows[0].count, 10) === 0;
   },
 
   async getBookingsForDate(salonId, bookingDate) {

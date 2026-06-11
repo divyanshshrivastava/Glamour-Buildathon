@@ -14,10 +14,8 @@ export async function getAdminSalons(token: string, page = 1, limit = 50) {
 
 export async function getPartnerApplications(token: string, status?: string) {
   const query = status ? `?status=${status}` : "";
-  return await apiFetchWithAuth<{
-    applications: PartnerApplication[];
-    pagination: any;
-  }>(`/admin/applications${query}`, token);
+  // The backend returns an array of applications in the `data` field, which apiFetchWithAuth unpacks.
+  return await apiFetchWithAuth<PartnerApplication[]>(`/admin/applications${query}`, token);
 }
 
 export async function updateApplicationStatus(
@@ -26,9 +24,13 @@ export async function updateApplicationStatus(
   status: "approved" | "rejected",
   rejectionReason?: string
 ) {
-  return await apiFetchWithAuth<PartnerApplication>(`/admin/applications/${id}`, token, {
-    method: "PUT",
-    body: JSON.stringify({ status, rejectionReason }),
+  const action = status === "approved" ? "approve" : "reject";
+  const endpoint = `/partners/${id}/${action}`; // Hits POST /api/v1/partners/:id/approve or /reject
+  const body = status === "rejected" ? JSON.stringify({ reason: rejectionReason }) : undefined;
+  
+  return await apiFetchWithAuth<PartnerApplication>(endpoint, token, {
+    method: "POST",
+    body,
   });
 }
 

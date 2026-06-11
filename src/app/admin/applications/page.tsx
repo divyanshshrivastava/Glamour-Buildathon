@@ -26,7 +26,7 @@ export default function AdminApplications() {
     try {
       const statusFilter = filter !== "all" ? filter : undefined;
       const data = await getPartnerApplications(token, statusFilter);
-      setApplications(data.applications || []);
+      setApplications(data || []);
     } catch (err) {
       console.error("Failed to fetch applications:", err);
       setError("Failed to load partner applications.");
