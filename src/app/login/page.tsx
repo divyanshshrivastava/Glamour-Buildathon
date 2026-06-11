@@ -33,6 +33,11 @@ function LoginContent() {
       const response = await loginUser(email, password);
       login(response.token, response as any);
       
+      // Store default city if available
+      if (response.city) {
+        localStorage.setItem("user_default_city", response.city);
+      }
+      
       const name = response.firstName || "there";
       showToast(`Welcome back, ${name}! 👋`, "success");
       

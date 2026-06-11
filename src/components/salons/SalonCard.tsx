@@ -51,7 +51,7 @@ export default function SalonCard({ salon }: SalonCardProps) {
           <div className="mt-3 flex items-center gap-4 text-sm text-muted">
             <span className="flex items-center gap-1">
               <MapPin size={14} />
-              {salon.distance}
+              {salon.city}
             </span>
             <span>{salon.reviewCount} reviews</span>
           </div>

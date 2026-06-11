@@ -9,6 +9,7 @@ export async function loginUser(email: string, password: string) {
     lastName: string | null;
     role: "customer" | "salonOwner" | "admin";
     salonId: string | null;
+    city: string | null;
     token: string;
     refreshToken: string;
     expiresIn: number;
@@ -26,12 +27,19 @@ export async function registerUser(data: {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  city?: string;
 }) {
   return await apiFetch<{
     id: string;
     email: string;
-    role: string;
-    createdAt: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: "customer" | "salonOwner" | "admin";
+    salonId: string | null;
+    city: string | null;
+    token: string;
+    refreshToken: string;
+    expiresIn: number;
   }>("/auth/register", {
     method: "POST",
     body: JSON.stringify(data),

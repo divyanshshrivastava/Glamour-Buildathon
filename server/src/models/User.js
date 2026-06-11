@@ -11,15 +11,16 @@ export const UserModel = {
       phone,
       role = 'customer',
       salonId = null,
+      city = null,
     } = userData;
 
     const id = uuidv4();
     const now = new Date();
 
     const result = await pool.query(
-      `INSERT INTO users (id, email, password, first_name, last_name, phone, role, salon_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, email, first_name, last_name, phone, role, salon_id, email_verified, active, last_login, created_at, updated_at`,
+      `INSERT INTO users (id, email, password, first_name, last_name, phone, role, salon_id, city, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id, email, first_name, last_name, phone, role, salon_id, city, email_verified, active, last_login, created_at, updated_at`,
       [
         id,
         email,
@@ -29,6 +30,7 @@ export const UserModel = {
         phone,
         role,
         salonId,
+        city,
         now,
         now,
       ],
@@ -46,14 +48,14 @@ export const UserModel = {
 
   async findById(id) {
     const result = await pool.query(
-      'SELECT id, email, first_name, last_name, phone, role, salon_id, email_verified, active, last_login, created_at, updated_at FROM users WHERE id = $1',
+      'SELECT id, email, first_name, last_name, phone, role, salon_id, city, email_verified, active, last_login, created_at, updated_at FROM users WHERE id = $1',
       [id],
     );
     return result.rows[0];
   },
 
   async update(id, userData) {
-    const { firstName, lastName, phone, avatar } = userData;
+    const { firstName, lastName, phone, avatar, city } = userData;
     const now = new Date();
 
     const result = await pool.query(
@@ -62,10 +64,11 @@ export const UserModel = {
            last_name = COALESCE($2, last_name),
            phone = COALESCE($3, phone),
            avatar = COALESCE($4, avatar),
-           updated_at = $5
-       WHERE id = $6
-       RETURNING id, email, first_name, last_name, phone, role, avatar, created_at, updated_at`,
-      [firstName, lastName, phone, avatar, now, id],
+           city = COALESCE($5, city),
+           updated_at = $6
+       WHERE id = $7
+       RETURNING id, email, first_name, last_name, phone, role, avatar, city, created_at, updated_at`,
+      [firstName, lastName, phone, avatar, city, now, id],
     );
 
     return result.rows[0];

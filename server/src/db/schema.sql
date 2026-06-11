@@ -10,6 +10,7 @@ CREATE TABLE
         avatar TEXT,
         role VARCHAR(50) NOT NULL DEFAULT 'customer', -- customer, salonOwner, admin
         salon_id UUID,
+        city VARCHAR(100),
         email_verified BOOLEAN DEFAULT FALSE,
         active BOOLEAN DEFAULT TRUE,
         last_login TIMESTAMP,

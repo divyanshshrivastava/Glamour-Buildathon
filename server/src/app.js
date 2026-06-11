@@ -46,7 +46,7 @@ app.use(cookieParser());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000000,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -57,13 +57,13 @@ app.use(limiter);
 // More specific rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 500 : 10, // Allow more attempts in development
+  max: process.env.NODE_ENV === 'development' ? 50000000 : 1000000, // Allow more attempts in development
   message: 'Too many login attempts, please try again later.',
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: process.env.NODE_ENV === 'development' ? 100 : 3, // Limit each IP to 3 registrations per hour
+  max: process.env.NODE_ENV === 'development' ? 10000000 : 3000000, // Limit each IP to 3 registrations per hour
   message: 'Too many registrations from this IP, please try again later.',
 });
 

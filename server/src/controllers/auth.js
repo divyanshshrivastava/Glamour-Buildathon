@@ -33,7 +33,7 @@ const cookieOptions = (maxAgeSeconds) => ({
 // ── POST /api/v1/auth/register ────────────────────────────────────────
 
 export const register = async (req, res) => {
-  const { email, password, firstName, lastName, phone } = req.body;
+  const { email, password, firstName, lastName, phone, city } = req.body;
 
   // Validate required fields
   if (!email || !password) {
@@ -74,27 +74,57 @@ export const register = async (req, res) => {
     firstName: firstName || null,
     lastName: lastName || null,
     phone: phone || null,
+    city: city || null,
     role: ROLES.CUSTOMER,
   });
 
-  // Generate email verification token
-  const verificationToken = uuidv4();
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  // Auto-verify email so user can log in immediately
+  await UserModel.verifyEmail(user.id);
+
+  // Generate tokens for auto-login
+  const tokenPayload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    salonId: user.salon_id || null,
+  };
+
+  const token = generateToken(tokenPayload);
+  const refreshToken = generateRefreshToken({ id: user.id });
+
+  // Create session
+  const sessionId = uuidv4();
+  const expiresAt = new Date(Date.now() + (parseInt(process.env.JWT_EXPIRE) || 3600) * 1000);
 
   await pool.query(
-    'INSERT INTO email_verification_tokens (id, user_id, token, expires_at, created_at) VALUES ($1, $2, $3, $4, $5)',
-    [uuidv4(), user.id, verificationToken, expiresAt, new Date()],
+    'INSERT INTO sessions (id, user_id, token, refresh_token, expires_at, created_at) VALUES ($1, $2, $3, $4, $5, $6)',
+    [sessionId, user.id, token, refreshToken, expiresAt, new Date()],
   );
 
-  // Send verification email
-  await sendVerificationEmail(email, firstName || 'there', verificationToken);
+  // Update last login
+  await UserModel.updateLastLogin(user.id);
+
+  // Set tokens in httpOnly cookies
+  const accessMaxAge = parseInt(process.env.JWT_EXPIRE) || 3600;
+  const refreshMaxAge = parseInt(process.env.JWT_REFRESH_EXPIRE) || 7 * 24 * 3600;
+  res.cookie('access_token', token, cookieOptions(accessMaxAge));
+  res.cookie('refresh_token', refreshToken, cookieOptions(refreshMaxAge));
+
+  // Send welcome email (non-blocking)
+  sendWelcomeEmail(email, firstName || 'there').catch(() => {});
 
   return createdResponse(res, {
     id: user.id,
     email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
     role: user.role,
-    createdAt: user.created_at,
-  }, 'Registration successful. Check your email to verify your account.');
+    salonId: user.salon_id,
+    city: user.city || null,
+    token,
+    refreshToken,
+    expiresIn: accessMaxAge,
+  }, 'Registration successful. You are now logged in.');
 };
 
 // ── POST /api/v1/auth/login ───────────────────────────────────────────
@@ -164,6 +194,7 @@ export const login = async (req, res) => {
     lastName: user.last_name,
     role: user.role,
     salonId: user.salon_id,
+    city: user.city || null,
     token,
     refreshToken,
     expiresIn: accessMaxAge,
@@ -388,6 +419,7 @@ export const getMe = async (req, res) => {
     phone: user.phone,
     role: user.role,
     salonId: user.salon_id,
+    city: user.city || null,
     emailVerified: user.email_verified,
     lastLogin: user.last_login,
     createdAt: user.created_at,

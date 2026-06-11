@@ -137,6 +137,7 @@ export interface User {
   phone: string | null;
   role: "customer" | "salonOwner" | "admin";
   salonId: string | null;
+  city: string | null;
   emailVerified: boolean;
   lastLogin?: string;
   createdAt: string;

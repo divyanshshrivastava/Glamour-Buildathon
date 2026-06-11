@@ -453,7 +453,7 @@ export default function SalonDetailClient({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="sticky top-24"
+              className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto"
             >
               <div className="bg-white rounded-2xl border border-border-light p-6 shadow-sm">
                 {/* Success State */}

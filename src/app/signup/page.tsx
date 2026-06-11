@@ -3,13 +3,40 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, Phone, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, User, Phone, ArrowRight, Loader2, AlertCircle, MapPin, ChevronDown } from "lucide-react";
 import { registerUser } from "@/lib/api/auth";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/components/shared/Toast";
 import { SITE_NAME } from "@/lib/constants";
 import Button from "@/components/shared/Button";
 
+const INDIAN_CITIES = [
+  "Mumbai",
+  "Delhi",
+  "Bangalore",
+  "Hyderabad",
+  "Chennai",
+  "Kolkata",
+  "Pune",
+  "Ahmedabad",
+  "Jaipur",
+  "Lucknow",
+  "Chandigarh",
+  "Indore",
+  "Bhopal",
+  "Nagpur",
+  "Surat",
+  "Kochi",
+  "Goa",
+  "Noida",
+  "Gurgaon",
+  "Vadodara",
+];
+
 export default function SignupPage() {
   const router = useRouter();
+  const { login } = useAuth();
+  const { showToast } = useToast();
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -17,13 +44,14 @@ export default function SignupPage() {
     email: "",
     phone: "",
     password: "",
+    city: "",
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -49,9 +77,28 @@ export default function SignupPage() {
       return;
     }
 
+    if (!formData.city) {
+      setError("Please select your city");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await registerUser(formData);
-      router.push("/login?registered=true");
+      const response = await registerUser(formData);
+      
+      // Auto-login: store token and set user in auth context
+      login(response.token, response as any);
+      
+      // Store the selected city as the user's default city
+      if (response.city) {
+        localStorage.setItem("user_default_city", response.city);
+      }
+      
+      const name = response.firstName || "there";
+      showToast(`Welcome, ${name}! Your account is ready 🎉`, "success");
+      
+      // Redirect to home page
+      router.push("/");
     } catch (err: any) {
       console.error("Signup error:", err);
       setError(err.message || "An error occurred during registration");
@@ -161,6 +208,38 @@ export default function SignupPage() {
                   className="block w-full pl-10 px-3 py-2 border border-border-light rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                   placeholder="+91 98765 43210"
                 />
+              </div>
+            </div>
+
+            {/* City / Location */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1" htmlFor="city">
+                Your city
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                  <MapPin size={18} />
+                </div>
+                <select
+                  id="city"
+                  name="city"
+                  required
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-10 py-2 border border-border-light rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select your city
+                  </option>
+                  {INDIAN_CITIES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-muted">
+                  <ChevronDown size={18} />
+                </div>
               </div>
             </div>
 

@@ -32,21 +32,21 @@ async function seed() {
     const now = new Date();
 
     const users = [
-      [adminId, 'admin@glamour.io', password, 'Admin', 'User', '+919876543210', 'admin', null, true, true, now, now, now],
-      [owner1Id, 'rajesh@luxurycuts.in', password, 'Rajesh', 'Kumar', '+919876543211', 'salonOwner', null, true, true, now, now, now],
-      [owner2Id, 'priya@bellesalon.in', password, 'Priya', 'Mehta', '+919876543212', 'salonOwner', null, true, true, now, now, now],
-      [owner3Id, 'amit@urbanstyle.in', password, 'Amit', 'Singh', '+919876543213', 'salonOwner', null, true, true, now, now, now],
-      [customer1Id, 'customer1@example.com', password, 'Ananya', 'Sharma', '+919876543214', 'customer', null, true, true, now, now, now],
-      [customer2Id, 'customer2@example.com', password, 'Rohan', 'Gupta', '+919876543215', 'customer', null, true, true, now, now, now],
-      [customer3Id, 'customer3@example.com', password, 'Sneha', 'Patel', '+919876543216', 'customer', null, true, true, now, now, now],
-      [customer4Id, 'customer4@example.com', password, 'Vikram', 'Joshi', '+919876543217', 'customer', null, true, true, now, now, now],
-      [customer5Id, 'customer5@example.com', password, 'Meera', 'Reddy', '+919876543218', 'customer', null, true, true, now, now, now],
+      [adminId, 'admin@glamour.io', password, 'Admin', 'User', '+919876543210', 'admin', null, 'Mumbai', true, true, now, now, now],
+      [owner1Id, 'rajesh@luxurycuts.in', password, 'Rajesh', 'Kumar', '+919876543211', 'salonOwner', null, 'Kolkata', true, true, now, now, now],
+      [owner2Id, 'priya@bellesalon.in', password, 'Priya', 'Mehta', '+919876543212', 'salonOwner', null, 'Bangalore', true, true, now, now, now],
+      [owner3Id, 'amit@urbanstyle.in', password, 'Amit', 'Singh', '+919876543213', 'salonOwner', null, 'Mumbai', true, true, now, now, now],
+      [customer1Id, 'customer1@example.com', password, 'Ananya', 'Sharma', '+919876543214', 'customer', null, 'Kolkata', true, true, now, now, now],
+      [customer2Id, 'customer2@example.com', password, 'Rohan', 'Gupta', '+919876543215', 'customer', null, 'Bangalore', true, true, now, now, now],
+      [customer3Id, 'customer3@example.com', password, 'Sneha', 'Patel', '+919876543216', 'customer', null, 'Mumbai', true, true, now, now, now],
+      [customer4Id, 'customer4@example.com', password, 'Vikram', 'Joshi', '+919876543217', 'customer', null, 'Delhi', true, true, now, now, now],
+      [customer5Id, 'customer5@example.com', password, 'Meera', 'Reddy', '+919876543218', 'customer', null, 'Hyderabad', true, true, now, now, now],
     ];
 
     for (const u of users) {
       await client.query(
-        `INSERT INTO users (id, email, password, first_name, last_name, phone, role, salon_id, email_verified, active, last_login, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        `INSERT INTO users (id, email, password, first_name, last_name, phone, role, salon_id, city, email_verified, active, last_login, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          ON CONFLICT (email) DO NOTHING`,
         u,
       );
