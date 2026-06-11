@@ -14,6 +14,7 @@ import {
   ChevronLeft
 } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
+import { useToast } from "@/components/shared/Toast";
 
 const ADMIN_NAV = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -33,6 +34,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading, logout, isAdmin } = useAuth();
+  const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -106,7 +108,8 @@ export default function AdminLayout({
             <button 
               onClick={() => {
                 logout();
-                router.push("/login");
+                showToast("You've been logged out successfully", "info");
+                router.push("/");
               }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
             >

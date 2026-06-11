@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User as UserIcon, LogOut, LayoutDashboard } from "lucide-react";
 import { NAV_ITEMS, SITE_NAME } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 import Button from "@/components/shared/Button";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/components/shared/Toast";
 import { getInitials } from "@/lib/utils";
 
 export default function Navbar() {
@@ -13,6 +15,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { isAuthenticated, user, logout, isAdmin, isSalonOwner, isLoading } = useAuth();
+  const { showToast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,6 +40,8 @@ export default function Navbar() {
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
+    showToast("You've been logged out successfully", "info");
+    router.push("/");
   };
 
   return (

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Navbar from "@/components/navbar/Navbar";
-import Footer from "@/components/footer/Footer";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { ToastProvider } from "@/components/shared/Toast";
+import LayoutShell from "@/components/layout/LayoutShell";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,9 +46,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <ToastProvider>
+            <LayoutShell>{children}</LayoutShell>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

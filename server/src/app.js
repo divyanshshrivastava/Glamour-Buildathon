@@ -18,17 +18,20 @@ import partnerRoutes from './routes/partners.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
 
-dotenv.config({
-  path: './.env.example',
-});
+dotenv.config();
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
+// Parse comma-separated CORS origins into an array
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim());
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -54,7 +57,7 @@ app.use(limiter);
 // More specific rate limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 500 : 5, // Allow more attempts in development
+  max: process.env.NODE_ENV === 'development' ? 500 : 10, // Allow more attempts in development
   message: 'Too many login attempts, please try again later.',
 });
 

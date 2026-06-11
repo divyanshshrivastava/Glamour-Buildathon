@@ -2,9 +2,7 @@ import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
-dotenv.config({
-  path: './.env.example',
-});
+dotenv.config();
 
 console.log('🔧 Database Configuration:');
 console.log(`Host: ${process.env.DB_HOST}`);

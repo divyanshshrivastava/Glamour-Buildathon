@@ -47,7 +47,20 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`API ${res.status} ${res.statusText} – ${path}: ${body}`);
+    // Try to parse the backend's JSON error envelope to get a friendly message
+    let message = `API ${res.status} ${res.statusText}`;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      // body wasn't JSON, use the raw text if available
+      if (body) {
+        message = body;
+      }
+    }
+    throw new Error(message);
   }
 
   const json: ApiResponse<T> = await res.json();
@@ -74,7 +87,18 @@ export async function apiFetchWithAuth<T>(
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`API ${res.status} ${res.statusText} – ${path}: ${body}`);
+    let message = `API ${res.status} ${res.statusText}`;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed.message) {
+        message = parsed.message;
+      }
+    } catch {
+      if (body) {
+        message = body;
+      }
+    }
+    throw new Error(message);
   }
 
   const json: ApiResponse<T> = await res.json();

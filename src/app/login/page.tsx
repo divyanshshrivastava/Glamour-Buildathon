@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { loginUser } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/components/shared/Toast";
 import { SITE_NAME } from "@/lib/constants";
 import Button from "@/components/shared/Button";
 
@@ -13,6 +14,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { showToast } = useToast();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +33,9 @@ function LoginContent() {
       const response = await loginUser(email, password);
       login(response.token, response as any);
       
+      const name = response.firstName || "there";
+      showToast(`Welcome back, ${name}! 👋`, "success");
+      
       // Redirect based on role
       if (response.role === "admin") {
         router.push("/admin");
@@ -41,7 +46,9 @@ function LoginContent() {
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message || "Invalid email or password");
+      const message = err.message || "Invalid email or password";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsLoading(false);
     }

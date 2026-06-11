@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
+import { useToast } from "@/components/shared/Toast";
 
 const DASHBOARD_NAV = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -33,6 +34,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { user, isAuthenticated, isLoading, logout, isSalonOwner, isAdmin } =
     useAuth();
+  const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -132,7 +134,8 @@ export default function DashboardLayout({
           <button
             onClick={() => {
               logout();
-              router.push("/login");
+              showToast("You've been logged out successfully", "info");
+              router.push("/");
             }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
           >
@@ -202,7 +205,8 @@ export default function DashboardLayout({
           <button
             onClick={() => {
               logout();
-              router.push("/login");
+              showToast("You've been logged out successfully", "info");
+              router.push("/");
             }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
           >
