@@ -25,6 +25,14 @@ Glamour is a modern, full-stack marketplace connecting customers with premium sa
 - **Application Management**: Handle partner onboarding requests
 - **Content Moderation**: Manage user reviews and platform quality
 
+### 🤖 AI-Powered Features (Powered by Gemini 2.5 Flash)
+- **AI Beauty Consultant (Customers):** Upload a selfie to get personalized hairstyle, color, and service recommendations based on your face shape and features.
+- **AI Concierge Search (Customers):** Use natural language (e.g., "urgent bridal makeup under ₹5000 near me") to instantly filter and discover the perfect salons.
+- **AI Review Intelligence (Customers & Owners):** Automatically summarizes hundreds of reviews into quick pros/cons and allows users to ask specific questions about a salon's reputation.
+- **AI Marketing Assistant (Owners):** Generate premium, platform-specific social media copy that automatically injects your real salon name and booking links.
+- **AI Business Insights (Owners):** Analyzes your salon's revenue, popular services, and customer retention to provide actionable growth recommendations.
+- **AI No-Show Predictor (Owners):** Analyzes historical booking patterns, weather, time of day, and lead time to flag high-risk bookings before they happen.
+
 ---
 
 ## 🏗️ Architecture & Tech Stack
@@ -47,6 +55,7 @@ The application follows a modern client-server architecture with separation of c
 - **Caching**: Redis (Performance optimization)
 - **Authentication**: JWT (JSON Web Tokens)
 - **Security**: Helmet, Express Rate Limit, BcryptJS
+- **AI Integration**: Google GenAI SDK (`gemini-2.5-flash` with in-memory sliding-window rate limiters)
 
 ---
 
@@ -81,6 +90,7 @@ Make sure you have the following installed:
    DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buildathon
    REDIS_URL=redis://localhost:6379
    JWT_SECRET=your_super_secret_jwt_key_change_in_production
+   GEMINI_API_KEY=your_gemini_api_key_here
    ```
 4. Run migrations and seed data:
    ```bash
@@ -177,6 +187,7 @@ The API runs on `http://localhost:5000/api/v1`.
 - `/bookings` - Appointment creation, status updates, and history
 - `/reviews` - User feedback submission and retrieval
 - `/partners` - Application submission for new salons
+- `/ai` - Centralized AI features (Beauty Consultant, Concierge, Marketing, Insights, No-Show Predictor)
 - `/admin` - Protected routes for platform management
 
 All endpoints expect and return JSON payloads wrapped in a standard envelope:
