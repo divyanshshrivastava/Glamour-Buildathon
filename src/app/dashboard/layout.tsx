@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   Menu,
   X,
+  Megaphone,
+  TrendingUp,
 } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
 import { useToast } from "@/components/shared/Toast";
@@ -22,6 +24,8 @@ const DASHBOARD_NAV = [
   { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
   { name: "Services", href: "/dashboard/services", icon: Scissors },
   { name: "Reviews", href: "/dashboard/reviews", icon: Star },
+  { name: "Marketing", href: "/dashboard/marketing", icon: Megaphone },
+  { name: "AI Insights", href: "/dashboard/insights", icon: TrendingUp },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

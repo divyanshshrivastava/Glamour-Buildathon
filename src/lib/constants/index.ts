@@ -8,6 +8,7 @@ export const SITE_DESCRIPTION =
 export const NAV_ITEMS: NavItem[] = [
   { label: "Explore", href: "#explore" },
   { label: "Salons", href: "/salons" },
+  { label: "AI Consultant", href: "/ai/beauty-consultant" },
   { label: "Services", href: "#services" },
   { label: "Reviews", href: "#reviews" },
   { label: "For Businesses", href: "/partner" },

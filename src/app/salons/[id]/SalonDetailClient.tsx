@@ -26,6 +26,7 @@ import { formatPrice } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { createBooking } from "@/lib/api/bookings";
 import type { Salon, Review, Service } from "@/types";
+import AIReviewInsights from "@/components/salons/AIReviewInsights";
 
 interface SalonDetailClientProps {
   salon: Salon;
@@ -391,6 +392,15 @@ export default function SalonDetailClient({
                   No reviews yet. Be the first to leave a review!
                 </p>
               )}
+            </motion.div>
+
+            {/* AI Review Insights */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+            >
+              <AIReviewInsights salonId={salon.id} />
             </motion.div>
 
             {/* Business Information */}

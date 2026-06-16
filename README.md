@@ -13,7 +13,7 @@ Glamour is a modern, full-stack marketplace connecting customers with premium sa
 - **Transparent Pricing**: Clear service menus with durations and costs
 - **Personalized Dashboard**: Track upcoming appointments and history
 
-### For Salon Owners (Future Scope)
+### For Salon Owners
 - **Profile Management**: Update gallery, amenities, and business hours
 - **Service Menu**: Add, edit, and categorize salon services
 - **Booking Management**: Accept, reschedule, or cancel appointments

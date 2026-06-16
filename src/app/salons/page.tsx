@@ -7,6 +7,8 @@ import AnimateIn from "@/components/shared/AnimateIn";
 import { getAllSalons, searchSalons } from "@/lib/api/salons";
 import type { Salon } from "@/types";
 
+import AIConciergeBar from "@/components/salons/AIConciergeBar";
+
 const CITIES = [
   "All Cities",
   "Mumbai",
@@ -101,6 +103,11 @@ export default function SalonsPage() {
               your needs.
             </p>
           </div>
+        </AnimateIn>
+
+        {/* AI Concierge Search */}
+        <AnimateIn direction="up" delay={0.05}>
+          <AIConciergeBar />
         </AnimateIn>
 
         {/* Search & Filter Bar */}

@@ -167,6 +167,7 @@ export const createReview = async (req, res) => {
   await cacheDel(`salons:detail:${salonId}`);
   await cacheDelPattern('salons:list:*');
   await cacheDelPattern('salons:featured:*');
+  await cacheDel(`ai:review-insights:${salonId}`);
 
   return createdResponse(res, {
     id: review.id,

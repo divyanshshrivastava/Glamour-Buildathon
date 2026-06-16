@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Calendar } from "lucide-react";
+import { Search, MapPin, Calendar, Sparkles } from "lucide-react";
 import Button from "@/components/shared/Button";
 import { heroSalonsMock } from "@/mock/salons";
 
@@ -135,8 +135,9 @@ export default function Hero() {
               <Button href="/salons" size="lg">
                 Explore Salons
               </Button>
-              <Button href="/partner" variant="outline" size="lg">
-                Become a Partner
+              <Button href="/ai/beauty-consultant" variant="outline" size="lg">
+                <Sparkles size={16} />
+                AI Beauty Consultant
               </Button>
             </motion.div>
 

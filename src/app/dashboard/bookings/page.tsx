@@ -20,8 +20,12 @@ import {
   Phone,
   Mail,
   Loader2,
+  ShieldAlert,
 } from "lucide-react";
 import Button from "@/components/shared/Button";
+import NoShowRiskBadge from "@/components/dashboard/NoShowRiskBadge";
+import { getSalonRiskOverview } from "@/lib/api/ai";
+import type { NoShowOverview, NoShowRisk } from "@/types/ai";
 
 const STATUS_TABS = [
   { key: "all", label: "All" },
@@ -49,6 +53,8 @@ export default function BookingsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [riskOverview, setRiskOverview] = useState<NoShowOverview | null>(null);
+  const [riskMap, setRiskMap] = useState<Record<string, NoShowRisk>>({});
 
   const fetchBookings = async (sId: string, status?: string) => {
     if (!token) return;
@@ -81,6 +87,27 @@ export default function BookingsPage() {
     };
     init();
   }, [token]);
+
+  // Load risk overview once we have salonId
+  useEffect(() => {
+    const loadRisk = async () => {
+      if (!salonId || !token) return;
+      try {
+        const overview = await getSalonRiskOverview(salonId);
+        setRiskOverview(overview);
+        // Build a map of bookingId -> risk for quick lookup
+        const map: Record<string, NoShowRisk> = {};
+        for (const r of overview.bookingRisks) {
+          map[r.bookingId] = r;
+        }
+        setRiskMap(map);
+      } catch (err) {
+        // Non-fatal — risk overview is optional
+        console.error("Risk overview failed:", err);
+      }
+    };
+    loadRisk();
+  }, [salonId, token]);
 
   useEffect(() => {
     if (salonId) fetchBookings(salonId, statusFilter);
@@ -150,6 +177,42 @@ export default function BookingsPage() {
         </p>
       </div>
 
+      {/* Risk Overview Card */}
+      {riskOverview && (riskOverview.highRisk > 0 || riskOverview.mediumRisk > 0) && (
+        <div className="bg-gradient-to-r from-amber-50 to-red-50 rounded-xl border border-amber-200 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <ShieldAlert size={20} className="text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">No-Show Risk Alert</p>
+              <p className="text-xs text-gray-500">
+                {riskOverview.highRisk} high risk, {riskOverview.mediumRisk} medium risk bookings
+              </p>
+            </div>
+          </div>
+          <div className="sm:ml-auto flex items-center gap-4 text-sm">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-gray-600">High: {riskOverview.highRisk}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-gray-600">Medium: {riskOverview.mediumRisk}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-gray-600">Low: {riskOverview.lowRisk}</span>
+            </span>
+            {riskOverview.revenueAtRisk > 0 && (
+              <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+                ₹{riskOverview.revenueAtRisk.toLocaleString()} at risk
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
@@ -206,6 +269,9 @@ export default function BookingsPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Risk
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -292,6 +358,23 @@ export default function BookingsPage() {
                       >
                         {booking.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {(booking.status === "pending" || booking.status === "confirmed") ? (
+                        <NoShowRiskBadge
+                          bookingId={booking.id}
+                          precomputed={
+                            riskMap[booking.id]
+                              ? {
+                                  riskLevel: riskMap[booking.id].riskLevel,
+                                  probability: riskMap[booking.id].probability,
+                                }
+                              : undefined
+                          }
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -393,7 +476,7 @@ export default function BookingsPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-6 py-12 text-center text-gray-500"
                   >
                     <Calendar

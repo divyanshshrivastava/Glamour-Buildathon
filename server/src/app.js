@@ -17,6 +17,7 @@ import reviewRoutes from './routes/reviews.js';
 import partnerRoutes from './routes/partners.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -99,6 +100,9 @@ app.use(`${apiVersion}/users`, userRoutes);
 
 // Admin routes
 app.use(`${apiVersion}/admin`, adminRoutes);
+
+// AI routes
+app.use(`${apiVersion}/ai`, aiRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
