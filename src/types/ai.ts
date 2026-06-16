@@ -13,6 +13,12 @@ export interface BeautyRecommendation {
   explanation: string;
   confidence: number;
   relatedServices: string[];
+  actualSalonServices?: {
+    salonId: string;
+    salonName: string;
+    serviceName: string;
+    price: number;
+  }[];
   category: "hairstyle" | "color" | "treatment" | "grooming" | "occasion";
 }
 

@@ -1,9 +1,7 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
-dotenv.config({
-  path: './.env.example',
-});
+dotenv.config();
 
 export const generateToken = (payload) => {
   // parseInt so jsonwebtoken treats the value as seconds, not ms via the `ms` lib

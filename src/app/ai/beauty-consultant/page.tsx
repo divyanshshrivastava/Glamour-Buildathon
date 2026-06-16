@@ -336,7 +336,7 @@ export default function BeautyConsultantPage() {
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 text-sm">
-                              {rec.name}
+                              Style: {rec.name}
                             </h3>
                             <span className="text-xs text-gray-500 capitalize">
                               {rec.category}
@@ -362,16 +362,43 @@ export default function BeautyConsultantPage() {
                           }`}
                         />
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {rec.relatedServices.map((svc) => (
-                          <span
-                            key={svc}
-                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md"
-                          >
-                            {svc}
-                          </span>
-                        ))}
-                      </div>
+                      
+                      {rec.actualSalonServices && rec.actualSalonServices.length > 0 ? (
+                        <div className="mt-4 pt-3 border-t border-gray-100">
+                          <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                            <Sparkles size={12} className="text-violet-500" /> Available near you:
+                          </p>
+                          <div className="flex flex-col gap-2">
+                            {rec.actualSalonServices.map((as, idx) => (
+                              <a
+                                key={idx}
+                                href={`/salons/${as.salonId}`}
+                                className="flex justify-between items-center bg-violet-50/50 hover:bg-violet-100/80 rounded-lg p-2.5 transition-colors border border-violet-100/50"
+                              >
+                                <div>
+                                  <p className="text-xs font-semibold text-violet-900">{as.serviceName}</p>
+                                  <p className="text-[10px] text-violet-600 mt-0.5">{as.salonName}</p>
+                                </div>
+                                <span className="text-xs font-bold text-violet-700 bg-white px-2 py-1 rounded-md shadow-sm">
+                                  ₹{as.price}
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-gray-100">
+                          <span className="text-xs text-gray-500 w-full mb-1">Look for these services:</span>
+                          {rec.relatedServices.map((svc) => (
+                            <span
+                              key={svc}
+                              className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded-md border border-gray-200"
+                            >
+                              {svc}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </motion.div>
                   )
                 )}

@@ -61,8 +61,8 @@ Return a JSON object with this EXACT structure:
   },
   "recommendations": [
     {
-      "name": "Recommendation Name",
-      "explanation": "Why this suits the person (2-3 sentences)",
+      "name": "Specific Style/Haircut/Treatment Name (e.g. Curtain Bangs, Classic Bob, Keratin)",
+      "explanation": "Explain why this suits the person using simple, customer-friendly language without technical jargon (2-3 sentences)",
       "confidence": 85,
       "relatedServices": ["Haircut", "Styling Session"],
       "category": "hairstyle | color | treatment | grooming | occasion"
@@ -148,6 +148,37 @@ relatedServices should use common salon service names like: Haircut, Hair Colori
 
       // Sort by rating descending
       matchedSalons.sort((a, b) => b.rating - a.rating);
+
+      // Map actual matched services back to the individual recommendations
+      if (analysis.recommendations) {
+        analysis.recommendations.forEach((rec) => {
+          rec.actualSalonServices = [];
+          if (rec.relatedServices) {
+            rec.relatedServices.forEach((rs) => {
+              matchedSalons.forEach((salon) => {
+                const ms = salon.matchedServices.find((s) =>
+                  s.name.toLowerCase().includes(rs.toLowerCase())
+                );
+                if (ms) {
+                  const exists = rec.actualSalonServices.find(
+                    (a) => a.serviceName === ms.name && a.salonId === salon.id
+                  );
+                  if (!exists) {
+                    rec.actualSalonServices.push({
+                      salonId: salon.id,
+                      salonName: salon.name,
+                      serviceName: ms.name,
+                      price: ms.price,
+                    });
+                  }
+                }
+              });
+            });
+          }
+          // Limit to top 3 options per recommendation
+          rec.actualSalonServices = rec.actualSalonServices.slice(0, 3);
+        });
+      }
     } catch (err) {
       console.error('[Beauty Consultant] Service matching failed:', err.message);
       // Non-fatal — we still return recommendations without matched salons
