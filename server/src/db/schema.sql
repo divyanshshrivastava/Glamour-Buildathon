@@ -20,6 +20,8 @@ CREATE TABLE
 
 CREATE INDEX idx_users_email ON users (email);
 
+CREATE UNIQUE INDEX idx_users_phone_unique ON users (phone) WHERE phone IS NOT NULL;
+
 CREATE INDEX idx_users_role ON users (role);
 
 CREATE INDEX idx_users_salon_id ON users (salon_id);

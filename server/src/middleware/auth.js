@@ -1,18 +1,28 @@
 import { verifyToken } from '../utils/jwt.js';
 import { errorResponse } from '../utils/response.js';
 import { ERROR_CODES } from '../config/constants.js';
+import pool from '../config/database.js';
 
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1] || req.cookies?.access_token;
-    console.log('Auth Middleware - Token:', token);
 
     if (!token) {
       return errorResponse(res, ERROR_CODES.UNAUTHORIZED, 'Missing authorization token', {}, 401);
     }
-    console.log('Auth Middleware - Verifying Token...');
+
     const decoded = verifyToken(token);
-    console.log('Auth Middleware - Decoded Token:', decoded);
+
+    // Verify session still exists in DB (single-session enforcement)
+    const sessionResult = await pool.query(
+      'SELECT id FROM sessions WHERE token = $1 AND user_id = $2',
+      [token, decoded.id],
+    );
+
+    if (sessionResult.rows.length === 0) {
+      return errorResponse(res, ERROR_CODES.UNAUTHORIZED, 'Session expired. You may have logged in from another device.', {}, 401);
+    }
+
     req.user = decoded;
     next();
   } catch (error) {

@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, Phone } from "lucide-react";
 import { loginUser } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/components/shared/Toast";
@@ -16,7 +16,8 @@ function LoginContent() {
   const { login } = useAuth();
   const { showToast } = useToast();
   
-  const [email, setEmail] = useState("");
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
+  const [credential, setCredential] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,13 +25,19 @@ function LoginContent() {
   const registered = searchParams.get("registered");
   const returnUrl = searchParams.get("returnUrl") || "/";
 
+  const handleMethodSwitch = (method: 'email' | 'phone') => {
+    setLoginMethod(method);
+    setCredential("");
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await loginUser(email, password);
+      const response = await loginUser(credential, password, loginMethod);
       login(response.token, response as any);
       
       // Store default city if available
@@ -51,7 +58,7 @@ function LoginContent() {
       }
     } catch (err: any) {
       console.error("Login error:", err);
-      const message = err.message || "Invalid email or password";
+      const message = err.message || "Invalid credentials";
       setError(message);
       showToast(message, "error");
     } finally {
@@ -87,29 +94,95 @@ function LoginContent() {
           </div>
         )}
 
+        {/* Login Method Toggle */}
+        <div className="flex rounded-xl bg-gray-100 p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => handleMethodSwitch('email')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+              loginMethod === 'email'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <Mail size={16} />
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => handleMethodSwitch('phone')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+              loginMethod === 'phone'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted hover:text-foreground'
+            }`}
+          >
+            <Phone size={16} />
+            Phone
+          </button>
+        </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1" htmlFor="email">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
-                  <Mail size={18} />
-                </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 px-3 py-2 border border-border-light rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  placeholder="you@example.com"
-                />
-              </div>
-            </div>
+            <AnimatePresence mode="wait">
+              {loginMethod === 'email' ? (
+                <motion.div
+                  key="email"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <label className="block text-sm font-medium text-foreground mb-1" htmlFor="email-input">
+                    Email address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                      <Mail size={18} />
+                    </div>
+                    <input
+                      id="email-input"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={credential}
+                      onChange={(e) => setCredential(e.target.value)}
+                      className="block w-full pl-10 px-3 py-2 border border-border-light rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="phone"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <label className="block text-sm font-medium text-foreground mb-1" htmlFor="phone-input">
+                    Phone number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                      <Phone size={18} />
+                    </div>
+                    <input
+                      id="phone-input"
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      required
+                      value={credential}
+                      onChange={(e) => setCredential(e.target.value)}
+                      className="block w-full pl-10 px-3 py-2 border border-border-light rounded-xl bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div>
               <div className="flex items-center justify-between mb-1">

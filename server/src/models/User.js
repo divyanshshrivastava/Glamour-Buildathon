@@ -46,6 +46,13 @@ export const UserModel = {
     return result.rows[0];
   },
 
+  async findByPhone(phone) {
+    const result = await pool.query('SELECT * FROM users WHERE phone = $1', [
+      phone,
+    ]);
+    return result.rows[0];
+  },
+
   async findById(id) {
     const result = await pool.query(
       'SELECT id, email, first_name, last_name, phone, role, salon_id, city, email_verified, active, last_login, created_at, updated_at FROM users WHERE id = $1',

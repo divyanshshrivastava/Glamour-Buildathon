@@ -1,7 +1,15 @@
 import { User } from "@/types";
 import { apiFetch, apiFetchWithAuth } from "./client";
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(
+  credential: string,
+  password: string,
+  method: 'email' | 'phone' = 'email'
+) {
+  const body = method === 'email'
+    ? { email: credential, password }
+    : { phone: credential, password };
+
   const response = await apiFetch<{
     id: string;
     email: string;
@@ -15,7 +23,7 @@ export async function loginUser(email: string, password: string) {
     expiresIn: number;
   }>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   
   return response;

@@ -8,6 +8,21 @@ export const PASSWORD_PATTERN =
 // E.164 phone format pattern
 export const PHONE_PATTERN = /^\+[1-9]\d{1,14}$/;
 
+// Normalize phone: strip spaces, dashes, parentheses, dots
+export const normalizePhone = (phone) => {
+  if (!phone) return phone;
+  let normalized = phone.replace(/[\s\-\(\)\.]/g, '');
+  // 10-digit number without country code → assume India (+91)
+  if (/^\d{10}$/.test(normalized)) {
+    normalized = '+91' + normalized;
+  }
+  // Has digits with no '+' prefix (e.g. "919876543210") → prepend '+'
+  if (!normalized.startsWith('+') && normalized.length > 10) {
+    normalized = '+' + normalized;
+  }
+  return normalized;
+};
+
 // Time format pattern (HH:MM)
 export const TIME_PATTERN = /^([0-1]\d|2[0-3]):([0-5]\d)$/;
 
@@ -31,7 +46,7 @@ export const validatePassword = (password) => {
 };
 
 export const validatePhone = (phone) => {
-  return PHONE_PATTERN.test(phone);
+  return PHONE_PATTERN.test(normalizePhone(phone));
 };
 
 export const validateTime = (time) => {

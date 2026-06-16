@@ -7,6 +7,7 @@ import {
   validateEmail,
   validatePassword,
   validatePhone,
+  normalizePhone,
 } from '../utils/validation.js';
 import {
   successResponse,
@@ -33,7 +34,8 @@ const cookieOptions = (maxAgeSeconds) => ({
 // ── POST /api/v1/auth/register ────────────────────────────────────────
 
 export const register = async (req, res) => {
-  const { email, password, firstName, lastName, phone, city } = req.body;
+  const { email, password, firstName, lastName, phone: rawPhone, city } = req.body;
+  const phone = rawPhone ? normalizePhone(rawPhone) : null;
 
   // Validate required fields
   if (!email || !password) {
@@ -64,6 +66,14 @@ export const register = async (req, res) => {
     return errorResponse(res, ERROR_CODES.EMAIL_ALREADY_EXISTS, 'An account with this email already exists', { field: 'email' }, 409);
   }
 
+  // Check if phone already exists
+  if (phone) {
+    const existingPhone = await UserModel.findByPhone(phone);
+    if (existingPhone) {
+      return errorResponse(res, ERROR_CODES.PHONE_ALREADY_EXISTS, 'An account with this phone number already exists', { field: 'phone' }, 409);
+    }
+  }
+
   // Hash password
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
@@ -91,6 +101,9 @@ export const register = async (req, res) => {
 
   const token = generateToken(tokenPayload);
   const refreshToken = generateRefreshToken({ id: user.id });
+
+  // Single-session enforcement: invalidate all existing sessions
+  await pool.query('DELETE FROM sessions WHERE user_id = $1', [user.id]);
 
   // Create session
   const sessionId = uuidv4();
@@ -130,16 +143,23 @@ export const register = async (req, res) => {
 // ── POST /api/v1/auth/login ───────────────────────────────────────────
 
 export const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, phone: rawPhone, password } = req.body;
+  const phone = rawPhone ? normalizePhone(rawPhone) : null;
 
-  if (!email || !password) {
-    return errorResponse(res, ERROR_CODES.VALIDATION_ERROR, 'Email and password are required', {}, 422);
+  if ((!email && !phone) || !password) {
+    return errorResponse(res, ERROR_CODES.VALIDATION_ERROR, 'Email or phone, and password are required', {}, 422);
   }
 
-  // Find user (includes password hash)
-  const user = await UserModel.findByEmail(email);
+  // Find user by email or phone (includes password hash)
+  let user;
+  if (email) {
+    user = await UserModel.findByEmail(email);
+  } else {
+    user = await UserModel.findByPhone(phone);
+  }
+
   if (!user) {
-    return errorResponse(res, ERROR_CODES.INVALID_CREDENTIALS, 'Invalid email or password', {}, 401);
+    return errorResponse(res, ERROR_CODES.INVALID_CREDENTIALS, 'Invalid credentials', {}, 401);
   }
 
   // Check account is active
@@ -155,7 +175,7 @@ export const login = async (req, res) => {
   // Compare password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return errorResponse(res, ERROR_CODES.INVALID_CREDENTIALS, 'Invalid email or password', {}, 401);
+    return errorResponse(res, ERROR_CODES.INVALID_CREDENTIALS, 'Invalid credentials', {}, 401);
   }
 
   // Generate tokens
@@ -168,6 +188,9 @@ export const login = async (req, res) => {
 
   const token = generateToken(tokenPayload);
   const refreshToken = generateRefreshToken({ id: user.id });
+
+  // Single-session enforcement: invalidate all existing sessions
+  await pool.query('DELETE FROM sessions WHERE user_id = $1', [user.id]);
 
   // Create session
   const sessionId = uuidv4();
